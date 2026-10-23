@@ -37,8 +37,10 @@
 
       <form id="auth-form">
         <div id="name-field" hidden>
-          <label for="display-name">Nom affiché</label>
-          <input id="display-name" type="text" maxlength="30" autocomplete="nickname">
+          <label for="display-name">Pseudo</label>
+          <input id="display-name" type="text" minlength="3" maxlength="20"
+                 pattern="[A-Za-z0-9_.\-]{3,20}" autocomplete="nickname">
+          <p class="muted small-print">3 à 20 caractères : lettres sans accent, chiffres, « _ », « . » ou « - ». C'est le nom affiché dans le classement.</p>
         </div>
 
         <label for="email">Email</label>

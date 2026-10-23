@@ -64,7 +64,7 @@ export async function setupNav() {
 
 // Menu qui s'ouvre quand on clique sur « GamerStats » (en haut à gauche).
 // Remplit l'élément [data-brand] présent dans le bandeau de chaque page.
-// Pour un membre connecté, il contient aussi « Supprimer mon compte ».
+// Pour un membre connecté, il contient aussi « Paramètres » et « Supprimer mon compte ».
 export async function setupBrandMenu() {
   const root = document.querySelector("[data-brand]");
   if (!root) return;
@@ -75,18 +75,27 @@ export async function setupBrandMenu() {
     <div class="brand-dropdown" hidden>
       <a href="index.html">Accueil</a>
       <a href="profil.html">Mon profil</a>
+      <button type="button" class="menu-item" data-settings hidden>Paramètres</button>
       <hr>
       <a href="confidentialite.html" class="small">Politique de confidentialité</a>
       <button type="button" class="menu-danger" data-delete hidden>Supprimer mon compte</button>
     </div>`;
   const button = root.querySelector(".logo");
   const menu = root.querySelector(".brand-dropdown");
+  const settingsItem = root.querySelector("[data-settings]");
   const deleteItem = root.querySelector("[data-delete]");
+  settingsItem.addEventListener("click", () => {
+    setOpen(false);
+    openNameDialog();
+  });
   deleteItem.addEventListener("click", () => {
     setOpen(false);
     openDeleteDialog();
   });
-  if (await currentUser()) deleteItem.hidden = false;
+  if (await currentUser()) {
+    settingsItem.hidden = false;
+    deleteItem.hidden = false;
+  }
   const setOpen = (open) => {
     menu.hidden = !open;
     button.setAttribute("aria-expanded", String(open));
@@ -101,6 +110,102 @@ export async function setupBrandMenu() {
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") setOpen(false);
   });
+}
+
+// ===== Pseudo (nom affiché dans le classement) =====
+// Mêmes règles que dans Supabase (display_name.sql).
+const NAME_RULE = /^[A-Za-z0-9_.-]{3,20}$/;
+
+// Pseudo du membre connecté, ou null s'il n'en a pas encore choisi.
+export async function getDisplayName() {
+  const user = await currentUser();
+  if (!user) return null;
+  const { data } = await supabase.from("users").select("display_name").eq("id", user.id).maybeSingle();
+  return data?.display_name ?? null;
+}
+
+// Enregistre le pseudo. Renvoie un message d'erreur, ou null si tout va bien.
+async function saveDisplayName(name) {
+  if (!NAME_RULE.test(name)) {
+    return "3 à 20 caractères : lettres sans accent, chiffres, « _ », « . » ou « - » (pas d'espace).";
+  }
+  const user = await currentUser();
+  const { error } = await supabase.from("users").update({ display_name: name }).eq("id", user.id);
+  if (error?.code === "23505") return "Ce pseudo est déjà pris, choisis-en un autre.";
+  if (error) return "Enregistrement impossible pour le moment, réessaie plus tard.";
+  // Prévient la page (bandeau, classement) que le pseudo a changé.
+  document.dispatchEvent(new CustomEvent("gamerstats:pseudo", { detail: name }));
+  return null;
+}
+
+// Fenêtre « Choisis ton pseudo » / « Paramètres ».
+// required = true : première connexion, impossible de fermer sans choisir.
+export async function openNameDialog({ required = false } = {}) {
+  let dialog = document.getElementById("name-dialog");
+  if (!dialog) {
+    dialog = document.createElement("dialog");
+    dialog.id = "name-dialog";
+    dialog.className = "game-dialog";
+    dialog.setAttribute("aria-labelledby", "name-title");
+    dialog.innerHTML = `
+      <div class="dialog-head">
+        <h2 id="name-title"></h2>
+        <button type="button" class="dialog-close" aria-label="Fermer">×</button>
+      </div>
+      <p class="muted" data-intro></p>
+      <form>
+        <label for="name-input">Pseudo</label>
+        <div class="form-row">
+          <input id="name-input" type="text" required minlength="3" maxlength="20"
+                 pattern="[A-Za-z0-9_.\\-]{3,20}" autocomplete="nickname">
+          <button type="submit">Enregistrer</button>
+        </div>
+        <p class="muted small-print">3 à 20 caractères : lettres sans accent, chiffres, « _ », « . » ou « - ».</p>
+        <p class="message" role="status"></p>
+      </form>`;
+    document.body.append(dialog);
+
+    const input = dialog.querySelector("input");
+    const submit = dialog.querySelector("[type=submit]");
+    const message = dialog.querySelector(".message");
+    dialog.querySelector(".dialog-close").addEventListener("click", () => dialog.close());
+    dialog.addEventListener("click", (event) => {
+      if (event.target === dialog && !dialog.dataset.required) dialog.close();
+    });
+    // Échap ne ferme pas la fenêtre quand le pseudo est obligatoire.
+    // (Chrome autorise parfois quand même la fermeture : on la rouvre alors aussitôt.)
+    dialog.addEventListener("cancel", (event) => {
+      if (dialog.dataset.required) event.preventDefault();
+    });
+    dialog.addEventListener("close", () => {
+      if (dialog.dataset.required) dialog.showModal();
+    });
+    dialog.querySelector("form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      submit.disabled = true;
+      const error = await saveDisplayName(input.value.trim());
+      submit.disabled = false;
+      if (error) {
+        message.textContent = error;
+        message.className = "message error";
+        return;
+      }
+      message.textContent = "";
+      delete dialog.dataset.required;
+      dialog.close();
+    });
+  }
+
+  if (required) dialog.dataset.required = "oui";
+  else delete dialog.dataset.required;
+  dialog.querySelector("#name-title").textContent = required ? "Choisis ton pseudo" : "Paramètres";
+  dialog.querySelector("[data-intro]").textContent = required
+    ? "Bienvenue ! Ton pseudo est le nom affiché dans le classement. Tu pourras le changer plus tard dans les Paramètres (menu GamerStats)."
+    : "Ton pseudo est le nom affiché dans le classement.";
+  dialog.querySelector(".dialog-close").hidden = required;
+  dialog.querySelector(".message").textContent = "";
+  dialog.querySelector("input").value = (await getDisplayName()) ?? "";
+  dialog.showModal();
 }
 
 // Fenêtre de confirmation de la suppression du compte (créée au premier clic).

@@ -166,6 +166,13 @@ dialog.game-dialog input { background: var(--surface); }
   font-size: .85rem; font-weight: 400; color: var(--error);
 }
 .brand-dropdown .menu-danger:hover { background: var(--surface); filter: none; }
+.brand-dropdown .menu-item {
+  display: block; width: 100%; text-align: left;
+  background: none; padding: 8px 12px; border-radius: 6px;
+  font-weight: 400; color: var(--text);
+}
+.brand-dropdown .menu-item:hover { background: var(--surface); filter: none; }
+.small-print { font-size: .85rem; margin: 8px 0 0; }
 .button-danger { background: var(--error); color: #0b0c10; }
 .notice { margin-bottom: 24px; }
 

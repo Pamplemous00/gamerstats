@@ -35,6 +35,7 @@
   <script type="module">
     import {
       supabase, currentUser, formatNumber, setupBrandMenu, getLinkedUsername, computeScores,
+      getDisplayName, openNameDialog,
     } from "./js/supabase.js";
     import { GAMES } from "./js/games.js";
     import { renderLeaderboard } from "./js/leaderboard.js";
@@ -49,8 +50,15 @@
     const $ = (id) => document.getElementById(id);
     const leaderboard = $("leaderboard");
 
-    // Bandeau : nom affiché (ou début de l'email) et déconnexion.
-    $("profile-name").textContent = user.user_metadata?.display_name || user.email.split("@")[0];
+    // Bandeau : pseudo et déconnexion. Sans pseudo (ex. première connexion avec Google),
+    // on demande d'en choisir un.
+    const pseudo = await getDisplayName();
+    $("profile-name").textContent = pseudo ?? "";
+    if (!pseudo) openNameDialog({ required: true });
+    document.addEventListener("gamerstats:pseudo", (event) => {
+      $("profile-name").textContent = event.detail;
+      renderLeaderboard(leaderboard);
+    });
     $("logout").addEventListener("click", async () => {
       await supabase.auth.signOut();
       window.location.href = "index.html";
