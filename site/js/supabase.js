@@ -2,7 +2,40 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm";
 import { SUPABASE_URL, SUPABASE_KEY } from "./config.js";
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+// « Rester connecté » : la session est gardée dans le stockage durable du navigateur
+// (localStorage, elle survit à la fermeture du navigateur) ou, si la case a été
+// décochée, dans le stockage de l'onglet (sessionStorage, effacé à la fermeture).
+const REMEMBER_KEY = "gamerstats-rester-connecte";
+
+function safe(action) {
+  try { return action(); } catch { return null; }
+}
+
+function remember() {
+  return safe(() => localStorage.getItem(REMEMBER_KEY)) !== "non";
+}
+
+const sessionStore = {
+  getItem: (key) => safe(() => localStorage.getItem(key) ?? sessionStorage.getItem(key)),
+  setItem: (key, value) => safe(() => {
+    const [keep, drop] = remember() ? [localStorage, sessionStorage] : [sessionStorage, localStorage];
+    keep.setItem(key, value);
+    drop.removeItem(key);
+  }),
+  removeItem: (key) => safe(() => {
+    localStorage.removeItem(key);
+    sessionStorage.removeItem(key);
+  }),
+};
+
+// À appeler juste avant de se connecter, selon la case « Rester connecté ».
+export function setRemember(value) {
+  safe(() => localStorage.setItem(REMEMBER_KEY, value ? "oui" : "non"));
+}
+
+export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { storage: sessionStore, persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+});
 
 // Renvoie l'utilisateur connecté, ou null.
 export async function currentUser() {

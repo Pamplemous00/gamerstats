@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nouveau mot de passe · Gamer Stats</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <div class="brand-menu" data-brand></div>
+      <nav data-nav-account></nav>
+    </div>
+  </header>
+
+  <!-- Page ouverte depuis le lien « mot de passe oublié » reçu par email. -->
+  <main class="container">
+    <div class="card narrow">
+      <h1>Nouveau mot de passe</h1>
+      <form id="form">
+        <label for="password">Nouveau mot de passe (8 caractères minimum)</label>
+        <input id="password" type="password" required minlength="8" autocomplete="new-password">
+
+        <label for="confirm">Confirme le mot de passe</label>
+        <input id="confirm" type="password" required minlength="8" autocomplete="new-password">
+
+        <p><button type="submit" id="submit">Enregistrer</button></p>
+        <p id="message" class="message" role="status"></p>
+      </form>
+    </div>
+  </main>
+
+  <script type="module">
+    import { supabase, currentUser, setupNav } from "./js/supabase.js";
+
+    setupNav();
+    const $ = (id) => document.getElementById(id);
+    const showMessage = (text, type = "") => {
+      $("message").textContent = text;
+      $("message").className = `message ${type}`;
+    };
+
+    // Le lien de l'email connecte temporairement le membre. Sans lui, la page ne sert à rien.
+    if (!(await currentUser())) {
+      $("submit").disabled = true;
+      showMessage("Ce lien est invalide ou a expiré. Refais une demande depuis « Mot de passe oublié ? ».", "error");
+    }
+
+    $("form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if ($("password").value !== $("confirm").value) {
+        showMessage("Les deux mots de passe ne sont pas identiques.", "error");
+        return;
+      }
+      $("submit").disabled = true;
+      const { error } = await supabase.auth.updateUser({ password: $("password").value });
+      if (error) {
+        showMessage(`Impossible d'enregistrer : ${error.message}`, "error");
+        $("submit").disabled = false;
+        return;
+      }
+      showMessage("Mot de passe modifié ! Redirection vers ton profil…", "success");
+      setTimeout(() => { window.location.href = "profil.html"; }, 1500);
+    });
+  </script>
+</body>
+</html>

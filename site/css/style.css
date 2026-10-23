@@ -28,6 +28,7 @@ body {
   flex-direction: column;
 }
 main { flex: 1; }
+[hidden] { display: none !important; }
 a { color: var(--accent); }
 h1, h2, h3 { line-height: 1.2; }
 .container { width: 100%; max-width: 1100px; margin: 0 auto; padding: 0 16px; }
@@ -207,6 +208,25 @@ button.logo .caret { font-size: .7rem; color: var(--muted); margin-left: 4px; }
 .brand-dropdown a:hover { background: var(--surface); }
 .brand-dropdown hr { border: none; border-top: 1px solid var(--border); margin: 6px 0; }
 .brand-dropdown .small { font-size: .85rem; color: var(--muted); }
+
+/* ===== Connexion : Google, options, séparateur ===== */
+.button-google {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; margin-top: 16px;
+  background: #ffffff; color: #1f1f1f; border: 1px solid #dadce0;
+}
+.button-google svg { width: 20px; height: 20px; }
+.separator {
+  display: flex; align-items: center; gap: 12px;
+  color: var(--muted); font-size: .85rem; margin: 16px 0 0;
+}
+.separator::before, .separator::after { content: ""; flex: 1; border-top: 1px solid var(--border); }
+.form-options {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; margin-top: 12px; font-size: .9rem;
+}
+label.checkbox { display: flex; align-items: center; gap: 8px; margin: 0; font-weight: 400; }
+label.checkbox input { width: auto; }
 
 /* ===== Onglets connexion / inscription ===== */
 .tabs { display: flex; gap: 8px; margin-bottom: 8px; }

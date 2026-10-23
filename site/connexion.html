@@ -16,9 +16,23 @@
 
   <main class="container">
     <div class="card narrow">
-      <div class="tabs" role="tablist">
+      <div class="tabs" role="tablist" id="tabs">
         <button type="button" role="tab" aria-selected="true" data-tab="login">Connexion</button>
         <button type="button" role="tab" aria-selected="false" data-tab="signup">Inscription</button>
+      </div>
+
+      <!-- Connexion avec Google -->
+      <div id="oauth">
+        <button type="button" class="button-google" id="google">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5a5.6 5.6 0 0 1-2.4 3.6v3h3.9c2.2-2.1 3.5-5.1 3.5-8.8z"/><path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-2.9l-3.9-3a7.2 7.2 0 0 1-10.8-3.8h-4v3.1A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.3 14.3a7.2 7.2 0 0 1 0-4.6V6.6h-4a12 12 0 0 0 0 10.8z"/><path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 0 0 1.3 6.6l4 3.1A7.2 7.2 0 0 1 12 4.8z"/></svg>
+          Continuer avec Google
+        </button>
+        <p class="separator"><span>ou</span></p>
+      </div>
+
+      <div id="reset-intro" hidden>
+        <h2>Mot de passe oublié</h2>
+        <p class="muted">Entre ton email : tu recevras un lien pour choisir un nouveau mot de passe.</p>
       </div>
 
       <form id="auth-form">
@@ -30,8 +44,15 @@
         <label for="email">Email</label>
         <input id="email" type="email" required autocomplete="email">
 
-        <label for="password">Mot de passe</label>
-        <input id="password" type="password" required minlength="8" autocomplete="current-password">
+        <div id="password-field">
+          <label for="password">Mot de passe</label>
+          <input id="password" type="password" required minlength="8" autocomplete="current-password">
+        </div>
+
+        <div class="form-options" id="login-options">
+          <label class="checkbox"><input type="checkbox" id="remember" checked> Rester connecté</label>
+          <button type="button" class="link-button" id="forgot">Mot de passe oublié ?</button>
+        </div>
 
         <p id="consent" class="muted" hidden>
           En créant un compte, tu acceptes notre
@@ -39,50 +60,82 @@
         </p>
 
         <p><button type="submit" id="submit">Se connecter</button></p>
+        <p><button type="button" class="link-button" id="back" hidden>← Retour à la connexion</button></p>
         <p id="message" class="message" role="status"></p>
       </form>
     </div>
   </main>
 
   <script type="module">
-    import { supabase, currentUser, setupNav } from "./js/supabase.js";
+    import { supabase, currentUser, setupNav, setRemember } from "./js/supabase.js";
 
     setupNav();
     if (await currentUser()) window.location.href = "profil.html";
 
+    // Trois modes : « login » (connexion), « signup » (inscription), « reset » (mot de passe oublié).
     let mode = "login";
-    const form = document.getElementById("auth-form");
-    const submit = document.getElementById("submit");
-    const message = document.getElementById("message");
-    const password = document.getElementById("password");
+    const $ = (id) => document.getElementById(id);
+    const submit = $("submit");
+    const password = $("password");
+    const pageUrl = (page) => new URL(page, window.location.href).href;
 
-    function showMessage(text, type) {
-      message.textContent = text;
-      message.className = `message ${type}`;
+    function showMessage(text, type = "") {
+      $("message").textContent = text;
+      $("message").className = `message ${type}`;
     }
 
-    // Bascule entre « Connexion » et « Inscription ».
-    document.querySelectorAll("[data-tab]").forEach((tab) => {
-      tab.addEventListener("click", () => {
-        mode = tab.dataset.tab;
-        document.querySelectorAll("[data-tab]").forEach((t) =>
-          t.setAttribute("aria-selected", t === tab ? "true" : "false"));
-        const signup = mode === "signup";
-        document.getElementById("name-field").hidden = !signup;
-        document.getElementById("consent").hidden = !signup;
-        password.autocomplete = signup ? "new-password" : "current-password";
-        submit.textContent = signup ? "Créer mon compte" : "Se connecter";
-        showMessage("", "");
+    function setMode(next) {
+      mode = next;
+      document.querySelectorAll("[data-tab]").forEach((t) =>
+        t.setAttribute("aria-selected", t.dataset.tab === mode ? "true" : "false"));
+      $("tabs").hidden = mode === "reset";
+      $("oauth").hidden = mode === "reset";
+      $("reset-intro").hidden = mode !== "reset";
+      $("name-field").hidden = mode !== "signup";
+      $("consent").hidden = mode !== "signup";
+      $("password-field").hidden = mode === "reset";
+      password.required = mode !== "reset";
+      $("login-options").hidden = mode !== "login";
+      $("back").hidden = mode !== "reset";
+      password.autocomplete = mode === "signup" ? "new-password" : "current-password";
+      submit.textContent = { login: "Se connecter", signup: "Créer mon compte", reset: "Recevoir le lien" }[mode];
+      showMessage("");
+    }
+
+    document.querySelectorAll("[data-tab]").forEach((tab) =>
+      tab.addEventListener("click", () => setMode(tab.dataset.tab)));
+    $("forgot").addEventListener("click", () => setMode("reset"));
+    $("back").addEventListener("click", () => setMode("login"));
+
+    // Connexion avec Google : on part sur la page Google puis on revient sur le profil.
+    $("google").addEventListener("click", async () => {
+      setRemember(true);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: pageUrl("profil.html") },
       });
+      if (error) showMessage("La connexion avec Google n'est pas disponible pour le moment.", "error");
     });
 
-    form.addEventListener("submit", async (event) => {
+    $("auth-form").addEventListener("submit", async (event) => {
       event.preventDefault();
-      const email = document.getElementById("email").value.trim();
+      const email = $("email").value.trim();
       submit.disabled = true;
-      showMessage("Un instant…", "");
+      showMessage("Un instant…");
+
+      if (mode === "reset") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: pageUrl("nouveau-mot-de-passe.html"),
+        });
+        submit.disabled = false;
+        // Même message que l'email existe ou non (on ne révèle pas qui est inscrit).
+        if (error) showMessage("Envoi impossible pour le moment, réessaie dans quelques minutes.", "error");
+        else showMessage("Si un compte existe avec cet email, tu vas recevoir un lien. Pense à regarder tes spams.", "success");
+        return;
+      }
 
       if (mode === "login") {
+        setRemember($("remember").checked);
         const { error } = await supabase.auth.signInWithPassword({ email, password: password.value });
         if (error) {
           showMessage("Email ou mot de passe incorrect.", "error");
@@ -93,12 +146,13 @@
         return;
       }
 
+      setRemember(true);
       const { data, error } = await supabase.auth.signUp({
         email,
         password: password.value,
         options: {
-          data: { display_name: document.getElementById("display-name").value.trim() || null },
-          emailRedirectTo: new URL("profil.html", window.location.href).href,
+          data: { display_name: $("display-name").value.trim() || null },
+          emailRedirectTo: pageUrl("profil.html"),
         },
       });
       submit.disabled = false;
