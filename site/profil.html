@@ -21,7 +21,12 @@
 
   <!-- À gauche : une carte par jeu (créées par le script ci-dessous). À droite : le classement. -->
   <main class="container profile-main layout-profile">
-    <div class="games-grid" id="games"></div>
+    <div>
+      <div class="games-grid" id="games"></div>
+      <p class="danger-zone">
+        <button type="button" class="link-button danger" id="delete-open">Supprimer mon compte</button>
+      </p>
+    </div>
 
     <aside class="card leaderboard">
       <h2>Classement</h2>
@@ -31,6 +36,26 @@
 
   <!-- Les fenêtres de détail (une par jeu) sont ajoutées ici par le script. -->
   <div id="dialogs"></div>
+
+  <!-- Confirmation de la suppression du compte -->
+  <dialog class="game-dialog" id="delete-dialog" aria-labelledby="delete-title">
+    <div class="dialog-head">
+      <h2 id="delete-title">Supprimer mon compte</h2>
+      <button type="button" class="dialog-close" aria-label="Fermer">×</button>
+    </div>
+    <p>
+      Ton compte sera <strong>définitivement supprimé</strong>, avec tes pseudos liés,
+      ton historique, tes scores et ta place dans le classement. Cette action est irréversible.
+    </p>
+    <form id="delete-form">
+      <label for="delete-confirm">Pour confirmer, tape <strong>SUPPRIMER</strong></label>
+      <div class="form-row">
+        <input id="delete-confirm" type="text" autocomplete="off" required>
+        <button type="submit" class="button-danger" id="delete-submit" disabled>Supprimer définitivement</button>
+      </div>
+      <p class="message" id="delete-message" role="status"></p>
+    </form>
+  </dialog>
 
   <script type="module">
     import {
@@ -54,6 +79,30 @@
     $("logout").addEventListener("click", async () => {
       await supabase.auth.signOut();
       window.location.href = "index.html";
+    });
+
+    // Suppression du compte : fenêtre de confirmation, il faut taper « SUPPRIMER ».
+    const deleteDialog = $("delete-dialog");
+    $("delete-open").addEventListener("click", () => deleteDialog.showModal());
+    deleteDialog.querySelector(".dialog-close").addEventListener("click", () => deleteDialog.close());
+    deleteDialog.addEventListener("click", (event) => {
+      if (event.target === deleteDialog) deleteDialog.close();
+    });
+    $("delete-confirm").addEventListener("input", (event) => {
+      $("delete-submit").disabled = event.target.value.trim() !== "SUPPRIMER";
+    });
+    $("delete-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      $("delete-submit").disabled = true;
+      const { error } = await supabase.rpc("delete_my_account");
+      if (error) {
+        $("delete-message").textContent = "La suppression a échoué, réessaie plus tard.";
+        $("delete-message").className = "message error";
+        $("delete-submit").disabled = false;
+        return;
+      }
+      await supabase.auth.signOut();
+      window.location.href = "index.html?compte=supprime";
     });
 
     // Couleur de la pastille selon le « Top x % » : dégradé continu

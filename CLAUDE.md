@@ -54,6 +54,7 @@ Site web qui centralise les statistiques de joueurs sur plusieurs jeux :
 - `seed_wot.sql` : ajoute le jeu World of Tanks (`wot`) et son mode `wn8`.
 - `wot.py` : `python wot.py <pseudo>` recherche le joueur (serveur EU) et calcule son WN8 ; fonctions réutilisées par `seed_wot_distribution.py`.
 - `seed_wot_distribution.py` : `python seed_wot_distribution.py [--target 1000]` remplit la distribution WN8 avec des joueurs EU actifs tirés au hasard.
+- `delete_account.sql` : fonction `delete_my_account()` (membres connectés uniquement) : supprime la ligne `auth.users` du membre → cascade sur users, game_accounts, rating_snapshots, scores, profile_scores. Les `distribution_samples` (anonymisés, non rattachés au compte) sont conservés, ce que dit la politique de confidentialité. Sur le site : lien discret « Supprimer mon compte » sous les cartes du profil → fenêtre de confirmation (taper SUPPRIMER) → déconnexion → `index.html?compte=supprime` affiche un message.
 - `reset_schema.sql` : supprime toutes les tables et leurs données (pour repartir de zéro uniquement).
 - `chess_fetch.py` : `python chess_fetch.py <pseudo>` récupère les ratings via l'API Chess.com et les ajoute à `distribution_samples` (un échantillon par joueur et par mode, identifié par un hash SHA-256 du pseudo, mis à jour à chaque recherche).
 - `.env` (à créer, ne pas versionner) :
@@ -97,7 +98,7 @@ Fait (20/10/2026) : remplissage Chess.com terminé — Bullet 1 000, Blitz ~1 54
 - Distribution : `seed_wot_distribution.py`, tirage aléatoire d'account IDs EU (500 M–620 M, ~2 % sont des joueurs actifs), hash `sha256("wot:{account_id}")`.
 
 ## Prochaines étapes
-1. Finaliser le site : prévoir la suppression de compte (promise dans la politique de confidentialité). Fait (23/10/2026) : email de contact RGPD, mise en ligne, vraie inscription testée en ligne par l'utilisateur (OK), Supabase > Authentication > URL Configuration réglé (Site URL = https://pamplemous00.github.io/gamerstats/, Redirect URLs = cette adresse + `/**` et `http://localhost:8000/**`).
+1. Site : rien de bloquant. Fait (23/10/2026) : suppression de compte (`delete_account.sql` exécuté, appel refusé aux non-connectés vérifié ; suppression réelle à tester avec un compte jetable), email de contact RGPD, mise en ligne, vraie inscription testée en ligne par l'utilisateur (OK), Supabase > Authentication > URL Configuration réglé (Site URL = https://pamplemous00.github.io/gamerstats/, Redirect URLs = cette adresse + `/**` et `http://localhost:8000/**`).
 2. World of Tanks : tester la carte sur le site (l'utilisateur se connecte), choisir le `difficulty_factor`. Ensuite osu! (nécessitera une Edge Function, clé secrète).
 
 Fait (19/10/2026) : classement global (top 10 + position perso), menu GamerStats avec la confidentialité, pieds de page retirés.

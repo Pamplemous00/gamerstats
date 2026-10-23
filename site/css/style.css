@@ -158,6 +158,13 @@ dialog.game-dialog[open] { animation: pop .18s ease-out; }
 .dialog-summary .pill { margin: 0; }
 dialog.game-dialog input { background: var(--surface); }
 
+/* ===== Suppression de compte ===== */
+.danger-zone { margin-top: 40px; font-size: .85rem; }
+.link-button.danger { color: var(--muted); text-decoration: underline; }
+.link-button.danger:hover { color: var(--error); }
+.button-danger { background: var(--error); color: #0b0c10; }
+.notice { margin-bottom: 24px; }
+
 /* ===== Classement ===== */
 .layout-profile { display: grid; grid-template-columns: 1fr 300px; gap: 24px; align-items: start; }
 @media (max-width: 640px) { .layout-profile { grid-template-columns: 1fr; } }

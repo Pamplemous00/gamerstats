@@ -16,6 +16,9 @@
 
   <main class="container layout-home">
     <section class="stack">
+      <p class="card notice" id="deleted-notice" role="status" hidden>
+        Ton compte et toutes tes données ont bien été supprimés.
+      </p>
       <div class="card">
         <h1>Compare ton niveau sur tous tes jeux</h1>
         <p class="muted">
@@ -53,6 +56,9 @@
     import { renderLeaderboard } from "./js/leaderboard.js";
     setupNav();
     renderLeaderboard(document.getElementById("leaderboard"));
+    if (new URLSearchParams(window.location.search).get("compte") === "supprime") {
+      document.getElementById("deleted-notice").hidden = false;
+    }
   </script>
 </body>
 </html>
