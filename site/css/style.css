@@ -159,9 +159,12 @@ dialog.game-dialog[open] { animation: pop .18s ease-out; }
 dialog.game-dialog input { background: var(--surface); }
 
 /* ===== Suppression de compte ===== */
-.danger-zone { margin-top: 40px; font-size: .85rem; }
-.link-button.danger { color: var(--muted); text-decoration: underline; }
-.link-button.danger:hover { color: var(--error); }
+.brand-dropdown .menu-danger {
+  display: block; width: 100%; text-align: left;
+  background: none; padding: 8px 12px; border-radius: 6px;
+  font-size: .85rem; font-weight: 400; color: var(--error);
+}
+.brand-dropdown .menu-danger:hover { background: var(--surface); filter: none; }
 .button-danger { background: var(--error); color: #0b0c10; }
 .notice { margin-bottom: 24px; }
 
