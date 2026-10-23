@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Connexion · Gamer Stats</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <div class="brand-menu" data-brand></div>
+      <nav data-nav-account></nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="card narrow">
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" aria-selected="true" data-tab="login">Connexion</button>
+        <button type="button" role="tab" aria-selected="false" data-tab="signup">Inscription</button>
+      </div>
+
+      <form id="auth-form">
+        <div id="name-field" hidden>
+          <label for="display-name">Nom affiché</label>
+          <input id="display-name" type="text" maxlength="30" autocomplete="nickname">
+        </div>
+
+        <label for="email">Email</label>
+        <input id="email" type="email" required autocomplete="email">
+
+        <label for="password">Mot de passe</label>
+        <input id="password" type="password" required minlength="8" autocomplete="current-password">
+
+        <p id="consent" class="muted" hidden>
+          En créant un compte, tu acceptes notre
+          <a href="confidentialite.html">politique de confidentialité</a>.
+        </p>
+
+        <p><button type="submit" id="submit">Se connecter</button></p>
+        <p id="message" class="message" role="status"></p>
+      </form>
+    </div>
+  </main>
+
+  <script type="module">
+    import { supabase, currentUser, setupNav } from "./js/supabase.js";
+
+    setupNav();
+    if (await currentUser()) window.location.href = "profil.html";
+
+    let mode = "login";
+    const form = document.getElementById("auth-form");
+    const submit = document.getElementById("submit");
+    const message = document.getElementById("message");
+    const password = document.getElementById("password");
+
+    function showMessage(text, type) {
+      message.textContent = text;
+      message.className = `message ${type}`;
+    }
+
+    // Bascule entre « Connexion » et « Inscription ».
+    document.querySelectorAll("[data-tab]").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        mode = tab.dataset.tab;
+        document.querySelectorAll("[data-tab]").forEach((t) =>
+          t.setAttribute("aria-selected", t === tab ? "true" : "false"));
+        const signup = mode === "signup";
+        document.getElementById("name-field").hidden = !signup;
+        document.getElementById("consent").hidden = !signup;
+        password.autocomplete = signup ? "new-password" : "current-password";
+        submit.textContent = signup ? "Créer mon compte" : "Se connecter";
+        showMessage("", "");
+      });
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const email = document.getElementById("email").value.trim();
+      submit.disabled = true;
+      showMessage("Un instant…", "");
+
+      if (mode === "login") {
+        const { error } = await supabase.auth.signInWithPassword({ email, password: password.value });
+        if (error) {
+          showMessage("Email ou mot de passe incorrect.", "error");
+          submit.disabled = false;
+          return;
+        }
+        window.location.href = "profil.html";
+        return;
+      }
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password: password.value,
+        options: {
+          data: { display_name: document.getElementById("display-name").value.trim() || null },
+          emailRedirectTo: new URL("profil.html", window.location.href).href,
+        },
+      });
+      submit.disabled = false;
+      if (error) {
+        showMessage(`Inscription impossible : ${error.message}`, "error");
+      } else if (data.session) {
+        window.location.href = "profil.html";
+      } else {
+        showMessage("Compte créé ! Clique sur le lien reçu par email pour l'activer, puis connecte-toi.", "success");
+      }
+    });
+  </script>
+</body>
+</html>

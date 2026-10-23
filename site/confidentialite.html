@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Confidentialité · Gamer Stats</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <div class="brand-menu" data-brand></div>
+      <nav data-nav-account></nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <article class="card">
+      <h1>Politique de confidentialité</h1>
+      <p class="muted">Dernière mise à jour : 19 octobre 2026</p>
+
+      <h2>Qui est responsable de tes données ?</h2>
+      <p>
+        Gamer Stats est un projet personnel. Pour toute question ou demande concernant
+        tes données, écris à : <a href="mailto:gamerstats.contact@gmail.com">gamerstats.contact@gmail.com</a>.
+      </p>
+
+      <h2>Quelles données sont collectées ?</h2>
+      <ul>
+        <li><strong>Ton compte</strong> : ton adresse email et ton mot de passe (stocké de façon chiffrée, nous ne le voyons jamais).</li>
+        <li><strong>Tes pseudos de jeu</strong> que tu choisis de lier à ton compte (par exemple ton pseudo Chess.com).</li>
+        <li><strong>Tes statistiques de jeu</strong> (ratings, nombre de parties), récupérées sur les API publiques des jeux, ainsi que l'historique de leur évolution et les scores calculés.</li>
+        <li><strong>Des statistiques anonymisées</strong> : pour savoir où se situe ton niveau, nous gardons les ratings de nombreux joueurs sans leur pseudo (il est remplacé par une empreinte chiffrée irréversible).</li>
+      </ul>
+
+      <h2>Pourquoi ?</h2>
+      <p>
+        Uniquement pour faire fonctionner le site : calculer ton score, l'afficher sur ton
+        profil et dans le classement. Aucune publicité, aucune revente de données.
+      </p>
+      <p>
+        <strong>Ce qui est public</strong> : dans le classement, tout le monde peut voir ton nom
+        affiché (ou « Joueur XXXX » si tu n'en as pas choisi), ta position et ton score total.
+        Ton email et tes pseudos de jeu ne sont jamais affichés publiquement.
+      </p>
+
+      <h2>Où sont-elles stockées ?</h2>
+      <p>
+        Les données sont hébergées par <a href="https://supabase.com" target="_blank" rel="noopener">Supabase</a>,
+        notre fournisseur de base de données. Le site n'utilise aucun cookie publicitaire ni outil de suivi.
+        Ta session de connexion est gardée dans ton navigateur (stockage local) pour que tu restes connecté.
+      </p>
+
+      <h2>Combien de temps ?</h2>
+      <p>Tant que ton compte existe. Si tu le supprimes, tes données personnelles sont supprimées avec lui.</p>
+
+      <h2>Tes droits</h2>
+      <p>
+        Conformément au RGPD, tu peux à tout moment demander à consulter, corriger ou supprimer
+        tes données, ou t'opposer à leur utilisation, en écrivant à l'adresse ci-dessus.
+        Tu peux aussi adresser une réclamation à la
+        <a href="https://www.cnil.fr" target="_blank" rel="noopener">CNIL</a>.
+      </p>
+    </article>
+  </main>
+
+  <script type="module">
+    import { setupNav } from "./js/supabase.js";
+    setupNav();
+  </script>
+</body>
+</html>

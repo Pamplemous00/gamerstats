@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gamer Stats</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <div class="brand-menu" data-brand></div>
+      <nav data-nav-account></nav>
+    </div>
+  </header>
+
+  <main class="container layout-home">
+    <section class="stack">
+      <div class="card">
+        <h1>Compare ton niveau sur tous tes jeux</h1>
+        <p class="muted">
+          Entre ton pseudo, on récupère tes statistiques et on te donne un score
+          qui tient compte de la difficulté d'atteindre ton niveau.
+          Additionne les scores de tous tes jeux et grimpe dans le classement.
+        </p>
+        <a href="profil.html" class="button">Calculer mon score</a>
+      </div>
+
+      <div class="card">
+        <h2>Comment sont calculés les points ?</h2>
+        <p>
+          Plus on monte en niveau, plus progresser devient difficile. Les points
+          <strong>doublent tous les 500 Elo</strong> : un joueur à 2 000 Elo a deux fois
+          plus de points qu'un joueur à 1 500.
+        </p>
+        <p>
+          Pour comparer des modes et des jeux différents, chaque niveau est converti
+          en « Elo équivalent Blitz Chess.com » : on regarde quel pourcentage de joueurs
+          tu dépasses, et on prend l'Elo Blitz qui correspond à ce même pourcentage.
+        </p>
+        <p class="muted">Jeux disponibles : Chess.com (Bullet, Blitz, Rapid). D'autres arrivent bientôt.</p>
+      </div>
+    </section>
+
+    <aside class="card leaderboard">
+      <h2>Classement</h2>
+      <div id="leaderboard"><p class="muted">Chargement…</p></div>
+    </aside>
+  </main>
+
+  <script type="module">
+    import { setupNav } from "./js/supabase.js";
+    import { renderLeaderboard } from "./js/leaderboard.js";
+    setupNav();
+    renderLeaderboard(document.getElementById("leaderboard"));
+  </script>
+</body>
+</html>
