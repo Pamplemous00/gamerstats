@@ -82,19 +82,28 @@
 
     // Crée la carte et la fenêtre de détail d'un jeu.
     function createGame(game) {
-      const icon = `<span class="game-icon" style="background:${game.color}" aria-hidden="true">${game.icon}</span>`;
+      const icon = game.image
+        ? `<span class="game-icon game-icon-image" aria-hidden="true"><img src="${game.image}" alt=""></span>`
+        : `<span class="game-icon" style="background:${game.color}" aria-hidden="true">${game.icon}</span>`;
 
+      // Carte « à collectionner » : cadre en dégradé, illustration du jeu, points, stats en bas.
+      const art = game.image
+        ? `<img class="tc-image" src="${game.image}" alt="">`
+        : `<span class="tc-icon" aria-hidden="true">${game.icon}</span>`;
       const card = document.createElement("button");
       card.type = "button";
-      card.className = "game-card empty";
+      card.className = "trading-card empty";
+      card.style.setProperty("--game", game.color);
       card.setAttribute("aria-haspopup", "dialog");
+      card.setAttribute("aria-label", `${game.name} : voir le détail`);
       card.innerHTML = `
-        ${icon}
-        <span class="game-name">${game.name}</span>
-        <span class="game-points" data-points>+ Ajouter mon pseudo</span>
-        <span class="game-label" data-label hidden>points</span>
-        <span class="pill" data-pill hidden></span>
-        <span class="game-footer" data-footer></span>`;
+        <span class="tc-inner">
+          <span class="tc-art">${art}<span class="pill tc-badge" data-pill hidden></span></span>
+          <span class="tc-title"><b>${game.name}</b><span data-points></span></span>
+          <span class="tc-stats" data-stats>
+            <span class="tc-add">+ Ajouter mon pseudo</span>
+          </span>
+        </span>`;
       $("games").append(card);
 
       const dialog = document.createElement("dialog");
@@ -180,12 +189,13 @@
       const top = Math.max(0.1, 100 - Number(best.percentile));
 
       card.classList.remove("empty");
+      card.style.setProperty("--top", pillColor(top));
       card.querySelector("[data-points]").textContent = formatNumber(best.points);
-      card.querySelector("[data-label]").hidden = false;
       fillPill(card.querySelector("[data-pill]"), top);
-      card.querySelector("[data-footer]").innerHTML = rows.length > 1
-        ? `Meilleur mode : <strong>${best.mode}</strong> · ${best.rating} ${game.ratingLabel}`
-        : `${game.ratingLabel} : <strong>${best.rating}</strong>`;
+      const modeName = rows.length > 1 ? best.mode : (game.modeLabel ?? best.mode);
+      card.querySelector("[data-stats]").innerHTML = `
+        <span>${rows.length > 1 ? "Meilleur mode" : "Mode"}<strong>${modeName}</strong></span>
+        <span>${game.ratingLabel}<strong>${best.rating}</strong></span>`;
 
       dialog.querySelector("[data-points]").textContent = formatNumber(best.points);
       fillPill(dialog.querySelector("[data-pill]"), top);
