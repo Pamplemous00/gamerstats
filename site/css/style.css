@@ -164,7 +164,7 @@ tr.best td { font-weight: 700; }
 .tc-stats strong { display: block; color: var(--text); font-size: .95rem; }
 .tc-stats .tc-add { grid-column: 1 / -1; text-align: center; color: var(--accent); font-weight: 700; font-size: .95rem; padding: 12px; }
 .game-icon-image { background: #1a1d24; overflow: hidden; }
-.game-icon-image img { display: block; height: 40px; width: auto; }
+.game-icon-image img { display: block; height: 40px; width: auto; max-width: 44px; object-fit: contain; }
 
 /* ===== Bandeau du profil ===== */
 .profile-bar .container { min-height: 72px; }

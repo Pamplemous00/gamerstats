@@ -22,6 +22,7 @@ export const GAMES = [
     slug: "wot",
     name: "World of Tanks",
     color: "#b0702a",
+    image: "img/wot-logo.svg",  // logo officiel (site de Wargaming)
     icon: `<svg viewBox="0 0 24 24"><rect x="2.5" y="13" width="19" height="5.5" rx="2.75"/><path d="M5.5 12.5l1.6-3.3h7.6l1.6 3.3z"/><rect x="13.5" y="9.4" width="9" height="1.7" rx=".85"/></svg>`,
     ratingLabel: "WN8",
     modeLabel: "Aléatoires",
