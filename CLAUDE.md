@@ -97,7 +97,7 @@ Fait (20/10/2026) : remplissage Chess.com terminé — Bullet 1 000, Blitz ~1 54
 - Distribution : `seed_wot_distribution.py`, tirage aléatoire d'account IDs EU (500 M–620 M, ~2 % sont des joueurs actifs), hash `sha256("wot:{account_id}")`.
 
 ## Prochaines étapes
-1. Finaliser le site : tester connexion/profil, compléter l'email de contact RGPD, ajouter `http://localhost:8000/**` (puis l'URL de prod) dans Supabase > Authentication > URL Configuration pour les emails de confirmation, prévoir la suppression de compte (promise dans la politique de confidentialité).
+1. Finaliser le site : régler Supabase > Authentication > URL Configuration (Site URL = https://pamplemous00.github.io/gamerstats/, Redirect URLs = cette adresse + `/**` et `http://localhost:8000/**`), tester une vraie inscription en ligne, prévoir la suppression de compte (promise dans la politique de confidentialité). Fait : email de contact RGPD, mise en ligne (23/10/2026).
 2. World of Tanks : tester la carte sur le site (l'utilisateur se connecte), choisir le `difficulty_factor`. Ensuite osu! (nécessitera une Edge Function, clé secrète).
 
 Fait (19/10/2026) : classement global (top 10 + position perso), menu GamerStats avec la confidentialité, pieds de page retirés.
