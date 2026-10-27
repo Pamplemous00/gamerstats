@@ -3,6 +3,8 @@
 -- À exécuter dans Supabase > SQL Editor APRÈS accounts_rls.sql et seed_lichess.sql.
 -- Modes avec répartition officielle (Lichess, table rating_distributions) : le « top »
 -- vient de gs_dist_top() (tous les joueurs actifs) au lieu de l'échantillon.
+-- Modes avec table de correspondance (Lichess, lichess_conversion.sql) : l'Elo équivalent
+-- vient de gs_convert_elo() (table ChessGoals) et non du top. Lancer lichess_conversion.sql avant.
 -- Peut être relancé sans risque (par exemple après avoir changé un réglage).
 --
 -- Monnaie commune du site : l'« Elo équivalent Blitz Chess.com ».
@@ -134,7 +136,11 @@ begin
     v_adj := 1 / (1 + exp(ln((1 - v_top) / v_top) * v_n / (v_n + k)));
 
     -- Elo équivalent Blitz.
-    if snap.mode_id = ref_mode_id or ref.n < 20 or ref.s is null then
+    -- Mode avec table de correspondance (Lichess, voir lichess_conversion.sql) : conversion directe.
+    v_elo := public.gs_convert_elo(snap.mode_id, snap.rating);
+    if v_elo is not null then
+      null;
+    elsif snap.mode_id = ref_mode_id or ref.n < 20 or ref.s is null then
       v_elo := snap.rating;
     elsif v_adj <= 0.10 then
       v_elo := ref.r90 + ref.s * ln(0.10 / v_adj);

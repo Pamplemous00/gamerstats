@@ -3,7 +3,8 @@
 Usage :
     python lichess_distribution.py            -> écrit lichess_distribution.sql
     python lichess_distribution.py --install  -> écrit lichess_install.sql
-                                                 (seed_lichess.sql + scores.sql + répartition)
+                                                 (seed_lichess.sql + lichess_conversion.sql
+                                                  + scores.sql + répartition)
 
 Ensuite : copier le fichier dans Supabase > SQL Editor et cliquer sur Run.
 Lichess met ces chiffres à jour chaque semaine (joueurs actifs de la semaine,
@@ -68,6 +69,7 @@ def main() -> None:
         out = HERE / "lichess_install.sql"
         out.write_text(
             (HERE / "seed_lichess.sql").read_text(encoding="utf-8") + "\n\n"
+            + (HERE / "lichess_conversion.sql").read_text(encoding="utf-8") + "\n\n"
             + (HERE / "scores.sql").read_text(encoding="utf-8") + "\n\n" + data,
             encoding="utf-8",
         )
