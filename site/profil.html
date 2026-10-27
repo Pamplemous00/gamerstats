@@ -268,7 +268,10 @@
       tray.classList.toggle("open");
     });
     tray.addEventListener("mouseleave", () => {
-      if (document.activeElement !== search || !search.value) closeTray();
+      if (document.activeElement !== search || !search.value) {
+        closeTray();
+        $("tiles").scrollTop = 0;  // refermé : on revoit la première rangée de logos
+      }
     });
     document.addEventListener("click", (event) => {
       if (!tray.contains(event.target)) tray.classList.remove("open");
