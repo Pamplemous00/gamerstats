@@ -4,3 +4,5 @@ __pycache__/
 *_log.txt
 .claude/settings.local.json
 maquettes/
+lichess_distribution.sql
+lichess_install.sql

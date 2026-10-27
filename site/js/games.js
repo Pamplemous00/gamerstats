@@ -4,6 +4,7 @@
 // modeLabel : nom affiché du mode pour un jeu qui n'en a qu'un.
 import * as chess from "./chess.js";
 import * as wot from "./wot.js";
+import * as lichess from "./lichess.js";
 
 // Jeux prévus mais pas encore branchés : tuiles grisées « Bientôt » dans le panneau du bas.
 // Logos : sites officiels des jeux ou projet Simple Icons (v13.21.0), affichés en gris.
@@ -11,7 +12,6 @@ import * as wot from "./wot.js";
 // le retirer d'ici et l'ajouter à GAMES.
 const soon = (name, file) => ({ name, image: file ? `img/bientot/${file}` : null });
 export const COMING_SOON = [
-  soon("Lichess", "lichess.svg"),
   soon("World of Warships", "worldofwarships.svg"),
   soon("World of Tanks Blitz", "wotblitz.svg"),
   soon("Dota 2", "dota2.svg"),
@@ -67,5 +67,17 @@ export const GAMES = [
     placeholder: "ex. Pamplemousse00",
     note: "WN8 en batailles aléatoires, calculé par GamerStats avec les statistiques officielles Wargaming et les valeurs attendues XVM (modxvm.com). Minimum 100 batailles.",
     linkAndRefresh: wot.linkAndRefresh,
+  },
+  {
+    slug: "lichess",
+    name: "Lichess",
+    color: "#b58863",
+    image: "img/lichess.svg",  // logo Lichess (Simple Icons), en blanc
+    icon: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>`,
+    ratingLabel: "Elo",
+    inputLabel: "Ton pseudo Lichess",
+    placeholder: "ex. DrNykterstein",
+    note: "Top % calculé sur tous les joueurs actifs de la semaine (statistiques officielles Lichess). Seuls les classements établis comptent, pas ceux marqués « ? ». Seul ton meilleur mode compte dans ton score total.",
+    linkAndRefresh: lichess.linkAndRefresh,
   },
 ];

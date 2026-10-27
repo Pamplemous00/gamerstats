@@ -1,6 +1,8 @@
 -- =====================================================================
 -- Gamer Stats — calcul des scores.
--- À exécuter dans Supabase > SQL Editor APRÈS accounts_rls.sql.
+-- À exécuter dans Supabase > SQL Editor APRÈS accounts_rls.sql et seed_lichess.sql.
+-- Modes avec répartition officielle (Lichess, table rating_distributions) : le « top »
+-- vient de gs_dist_top() (tous les joueurs actifs) au lieu de l'échantillon.
 -- Peut être relancé sans risque (par exemple après avoir changé un réglage).
 --
 -- Monnaie commune du site : l'« Elo équivalent Blitz Chess.com ».
@@ -71,7 +73,9 @@ declare
   ref_mode_id   bigint;
   ref           record;
   m             record;
+  dist          record;
   snap          record;
+  v_n           integer;
   v_below       integer;
   v_equal       integer;
   v_top         numeric;
@@ -100,9 +104,16 @@ begin
     where ga.user_id = me
     order by rs.game_account_id, rs.mode_id, rs.fetched_at desc
   loop
-    select * into m from public.gs_mode_stats(snap.mode_id);
-
     -- « top » : part des joueurs qui font mieux.
+    -- Mode avec répartition officielle (Lichess) : calcul direct sur tous les joueurs actifs.
+    select * into dist from public.gs_dist_top(snap.mode_id, snap.rating);
+    if dist.top is not null then
+      v_top := dist.top;
+      v_n   := dist.n;
+    else
+    -- Sinon : comparaison avec l'échantillon de joueurs (Chess.com, WoT).
+    select * into m from public.gs_mode_stats(snap.mode_id);
+    v_n := m.n;
     if m.n < 20 or m.s is null or m.s <= 0 then
       v_top := 0.5;                                        -- pas assez de données
     elsif snap.rating >= m.r90 then
@@ -116,10 +127,11 @@ begin
         and ds.last_played_at >= now() - recent_window;
       v_top := 1 - (v_below + 0.5 * v_equal) / m.n;
     end if;
+    end if;
     v_top := least(greatest(v_top, 1e-9), 1 - 1e-9);
 
     -- Correction de fiabilité (échelle logit).
-    v_adj := 1 / (1 + exp(ln((1 - v_top) / v_top) * m.n / (m.n + k)));
+    v_adj := 1 / (1 + exp(ln((1 - v_top) / v_top) * v_n / (v_n + k)));
 
     -- Elo équivalent Blitz.
     if snap.mode_id = ref_mode_id or ref.n < 20 or ref.s is null then
@@ -138,7 +150,7 @@ begin
     insert into public.scores (game_account_id, mode_id, percentile, sample_size,
                                adjusted_score, equivalent_elo, points, computed_at)
     values (snap.game_account_id, snap.mode_id,
-            round(100 * (1 - v_top), 3), m.n, round(100 * (1 - v_adj), 3),
+            round(100 * (1 - v_top), 3), v_n, round(100 * (1 - v_adj), 3),
             round(v_elo),
             round(base_points * power(2::numeric, v_elo / elo_step) * snap.difficulty_factor),
             now())
