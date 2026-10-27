@@ -6,7 +6,7 @@
   <title>Mon profil · Gamer Stats</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body class="has-tray">
   <!-- Bandeau : logo à gauche, nom du profil et score total à droite -->
   <header class="site-header profile-bar">
     <div class="container">
@@ -19,15 +19,34 @@
     </div>
   </header>
 
-  <!-- À gauche : une carte par jeu (créées par le script ci-dessous). À droite : le classement. -->
+  <!-- À gauche : une carte par jeu lié (créées par le script ci-dessous). À droite : le classement. -->
   <main class="container profile-main layout-profile">
-    <div class="games-grid" id="games"></div>
+    <div>
+      <div class="games-grid" id="games"></div>
+      <p class="muted" id="no-games" hidden>Ajoute ton premier jeu depuis le panneau en bas de l'écran.</p>
+    </div>
 
     <aside class="card leaderboard">
       <h2>Classement</h2>
       <div id="leaderboard"><p class="muted">Chargement…</p></div>
     </aside>
   </main>
+
+  <!-- Panneau collé en bas : les jeux pas encore liés (logo seul). Il monte à la moitié
+       de l'écran au survol (ou au toucher sur mobile) et redescend quand la souris s'en va. -->
+  <section class="tray" id="tray" aria-label="Ajouter un jeu">
+    <div class="container tray-content">
+      <div class="tray-bar" id="tray-bar">
+        <span class="tray-handle" aria-hidden="true"></span>
+        <label class="tray-search">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+          <input id="game-search" type="search" placeholder="Rechercher…" aria-label="Rechercher un jeu" autocomplete="off">
+        </label>
+      </div>
+      <div class="tray-tiles" id="tiles"></div>
+      <p class="muted tray-empty" id="tiles-empty" hidden></p>
+    </div>
+  </section>
 
   <!-- Les fenêtres de détail (une par jeu) sont ajoutées ici par le script. -->
   <div id="dialogs"></div>
@@ -92,6 +111,7 @@
         : `<span class="tc-icon" aria-hidden="true">${game.icon}</span>`;
       const card = document.createElement("button");
       card.type = "button";
+      card.hidden = true;  // affichée seulement une fois le jeu lié
       card.className = "trading-card empty";
       card.style.setProperty("--game", game.color);
       card.setAttribute("aria-haspopup", "dialog");
@@ -105,6 +125,19 @@
           </span>
         </span>`;
       $("games").append(card);
+
+      // Tuile du panneau du bas (jeu pas encore lié) : uniquement le logo officiel.
+      const tile = document.createElement("button");
+      tile.type = "button";
+      tile.className = "game-tile";
+      tile.style.setProperty("--game", game.color);
+      tile.dataset.name = game.name.toLowerCase();
+      tile.title = game.name;
+      tile.setAttribute("aria-label", `Ajouter ${game.name}`);
+      tile.innerHTML = game.image
+        ? `<img src="${game.image}" alt="">`
+        : `<span class="tc-icon" aria-hidden="true">${game.icon}</span>`;
+      $("tiles").append(tile);
 
       const dialog = document.createElement("dialog");
       dialog.className = "game-dialog";
@@ -148,6 +181,10 @@
 
       // Ouverture / fermeture : clic sur la carte, sur ×, sur le fond flouté, ou Échap.
       card.addEventListener("click", () => dialog.showModal());
+      tile.addEventListener("click", () => {
+        closeTray();
+        dialog.showModal();
+      });
       dialog.querySelector(".dialog-close").addEventListener("click", () => dialog.close());
       dialog.addEventListener("click", (event) => {
         if (event.target === dialog) dialog.close();
@@ -179,15 +216,18 @@
         submit.disabled = false;
       });
 
-      return { game, card, dialog, input, submit };
+      return { game, card, tile, dialog, input, submit };
     }
 
     // Met à jour la carte et la fenêtre d'un jeu avec ses lignes de score.
-    function renderGame({ game, card, dialog }, rows) {
+    // Un jeu avec un score passe du panneau du bas (tuile) aux cartes du haut.
+    function renderGame({ game, card, tile, dialog }, rows) {
       if (!rows.length) return;
       const best = rows.reduce((a, b) => (b.points > a.points ? b : a));
       const top = Math.max(0.1, 100 - Number(best.percentile));
 
+      card.hidden = false;
+      tile.hidden = true;
       card.classList.remove("empty");
       card.style.setProperty("--top", pillColor(top));
       card.querySelector("[data-points]").textContent = formatNumber(best.points);
@@ -210,12 +250,55 @@
       dialog.querySelector("[data-scores]").hidden = false;
     }
 
+    // ===== Panneau du bas =====
+    const tray = $("tray");
+    const search = $("game-search");
+    // Ferme le panneau et vide la recherche (la loupe est cachée quand il est fermé).
+    function closeTray() {
+      tray.classList.remove("open");
+      if (tray.contains(document.activeElement)) document.activeElement.blur();
+      if (search.value) {
+        search.value = "";
+        updateTiles();
+      }
+    }
+    // Sur mobile (pas de survol) : toucher la barre ouvre / ferme le panneau.
+    $("tray-bar").addEventListener("click", (event) => {
+      if (event.target.closest(".tray-search")) return;
+      tray.classList.toggle("open");
+    });
+    tray.addEventListener("mouseleave", () => {
+      if (document.activeElement !== search || !search.value) closeTray();
+    });
+    document.addEventListener("click", (event) => {
+      if (!tray.contains(event.target)) tray.classList.remove("open");
+    });
+
+    // Recherche + message quand aucune tuile n'est visible.
+    function updateTiles() {
+      const text = search.value.trim().toLowerCase();
+      let available = 0, shown = 0;
+      for (const { tile } of games) {
+        if (tile.hidden) continue;
+        available++;
+        const match = tile.dataset.name.includes(text);
+        tile.classList.toggle("filtered", !match);
+        shown += match;
+      }
+      const empty = $("tiles-empty");
+      empty.hidden = shown > 0;
+      empty.textContent = available ? "Aucun jeu ne correspond à ta recherche." : "Tu as ajouté tous les jeux disponibles.";
+      $("no-games").hidden = games.some((g) => !g.card.hidden);
+    }
+    search.addEventListener("input", updateTiles);
+
     const games = GAMES.map(createGame);
 
     // Met à jour le bandeau et toutes les cartes.
     function renderAll({ rows, total }) {
       $("total").textContent = formatNumber(total);
       for (const g of games) renderGame(g, rows.filter((r) => r.game === g.game.name));
+      updateTiles();
     }
 
     // Au chargement : on préremplit les pseudos déjà liés et on affiche les scores.
@@ -231,6 +314,7 @@
     } else {
       $("total").textContent = "0";
     }
+    updateTiles();
     renderLeaderboard(leaderboard);  // après le calcul, pour que ton score soit à jour
   </script>
 </body>

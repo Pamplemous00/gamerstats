@@ -166,6 +166,55 @@ tr.best td { font-weight: 700; }
 .game-icon-image { background: #1a1d24; overflow: hidden; }
 .game-icon-image img { display: block; height: 40px; width: auto; max-width: 44px; object-fit: contain; }
 
+/* ===== Panneau des jeux à ajouter (collé en bas du profil) =====
+   Fermé : une rangée de logos. Ouvert (survol, toucher, ou recherche en cours) : moitié de l'écran. */
+body.has-tray { --tray-closed: 96px; padding-bottom: calc(var(--tray-closed) + 24px); }
+.tray {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  height: var(--tray-closed); overflow: hidden;
+  background: var(--bg); border-top: 1px solid var(--border);
+  box-shadow: 0 -12px 30px rgba(0, 0, 0, .6);
+  transition: height .35s ease;
+}
+.tray.open, .tray:has(.tray-search input:focus) { height: 50vh; }
+@media (hover: hover) { .tray:hover { height: 50vh; } }
+.tray-content { height: 100%; display: flex; flex-direction: column; padding-top: 10px; }
+.tray-bar {
+  position: relative; display: flex; justify-content: center; align-items: center;
+  min-height: 30px; margin-bottom: 10px; cursor: pointer;
+  transition: min-height .35s ease, margin .35s ease;
+}
+.tray-handle { width: 44px; height: 4px; border-radius: 99px; background: var(--border); }
+.tray-search { position: absolute; right: 0; top: 50%; translate: 0 -50%; width: 200px; margin: 0; transition: opacity .2s; }
+.tray-search svg { position: absolute; left: 10px; top: 50%; translate: 0 -50%; width: 14px; height: 14px; stroke: var(--muted); fill: none; stroke-width: 2; }
+.tray-search input { padding: 6px 10px 6px 30px; border-radius: 999px; font-size: .85rem; background: var(--bg); }
+.tray-tiles {
+  flex: 1; overflow-y: auto; padding: 3px 0 16px;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; align-content: start;
+}
+.game-tile {
+  height: 60px; padding: 0; border-radius: 10px; display: grid; place-items: center;
+  background: var(--bg); border: 1px solid var(--border); color: var(--game);
+  transition: transform .15s, border-color .15s, background .15s;
+}
+.game-tile:hover, .game-tile:focus-visible {
+  transform: translateY(-2px); border-color: var(--game); filter: none; outline: none;
+  background: radial-gradient(circle at 50% 60%, color-mix(in srgb, var(--game) 30%, transparent), transparent 70%), var(--bg);
+}
+.game-tile img { max-height: 62%; max-width: 72%; }
+.game-tile .tc-icon { position: static; width: 40px; height: 40px; filter: none; }
+.game-tile.filtered { display: none; }
+.tray-empty { margin: 0; font-size: .85rem; }
+/* Panneau fermé : pas de loupe, barre réduite pour que les logos remontent. */
+.tray:not(.open):not(:has(.tray-search input:focus)) .tray-tiles { overflow: hidden; }
+.tray:not(.open):not(:has(.tray-search input:focus)) .tray-bar { min-height: 6px; margin-bottom: 8px; }
+.tray:not(.open):not(:has(.tray-search input:focus)) .tray-search { opacity: 0; visibility: hidden; pointer-events: none; }
+@media (hover: hover) {
+  .tray:hover .tray-tiles { overflow-y: auto; }
+  .tray:hover .tray-bar { min-height: 30px; margin-bottom: 10px; }
+  .tray:hover .tray-search { opacity: 1; visibility: visible; pointer-events: auto; }
+}
+
 /* ===== Bandeau du profil ===== */
 .profile-bar .container { min-height: 72px; }
 .profile-info { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
