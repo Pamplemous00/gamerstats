@@ -300,7 +300,10 @@
       tile.title = `${soon.name} : bientôt disponible`;
       tile.setAttribute("role", "img");
       tile.setAttribute("aria-label", `${soon.name}, bientôt disponible`);
-      tile.innerHTML = `<img src="${soon.image}" alt=""><span class="soon-badge">Bientôt</span>`;
+      const visual = soon.image
+        ? `<img src="${soon.image}" alt="">`
+        : `<span class="soon-name">${soon.name}</span>`;
+      tile.innerHTML = `${visual}<span class="soon-badge">Bientôt</span>`;
       $("tiles").append(tile);
     }
 

@@ -6,15 +6,40 @@ import * as chess from "./chess.js";
 import * as wot from "./wot.js";
 
 // Jeux prévus mais pas encore branchés : tuiles grisées « Bientôt » dans le panneau du bas.
-// Logos : projet Simple Icons (v13.21.0), recolorés en gris. Quand un jeu est branché,
+// Logos : sites officiels des jeux ou projet Simple Icons (v13.21.0), affichés en gris.
+// Sans image : le nom du jeu est écrit à la place. Quand un jeu est branché,
 // le retirer d'ici et l'ajouter à GAMES.
+const soon = (name, file) => ({ name, image: file ? `img/bientot/${file}` : null });
 export const COMING_SOON = [
-  { name: "Lichess", image: "img/bientot/lichess.svg" },
-  { name: "osu!", image: "img/bientot/osu.svg" },
-  { name: "Dota 2", image: "img/bientot/dota2.svg" },
-  { name: "Counter-Strike 2", image: "img/bientot/counterstrike.svg" },
-  { name: "League of Legends", image: "img/bientot/leagueoflegends.svg" },
-  { name: "Valorant", image: "img/bientot/valorant.svg" },
+  soon("Lichess", "lichess.svg"),
+  soon("World of Warships", "worldofwarships.svg"),
+  soon("World of Tanks Blitz", "wotblitz.svg"),
+  soon("Dota 2", "dota2.svg"),
+  soon("Counter-Strike 2", "counterstrike.svg"),
+  soon("Age of Empires IV", "ageofempires.webp"),
+  soon("Age of Empires II", "ageofempires.webp"),
+  soon("Pokémon Showdown", "pokemon.svg"),
+  soon("TETR.IO", "tetrio.png"),
+  soon("Go (OGS)", "ogs.png"),
+  soon("Overwatch 2", "overwatch.png"),
+  soon("TypeRacer", "typeracer.png"),
+  soon("osu!", "osu.svg"),
+  soon("Apex Legends"),
+  soon("Clash Royale", "clashroyale.webp"),
+  soon("Brawl Stars"),
+  soon("Clash of Clans", "clashofclans.webp"),
+  soon("PUBG", "pubg.svg"),
+  soon("StarCraft II"),
+  soon("Hypixel", "hypixel.png"),
+  soon("Monkeytype", "monkeytype.svg"),
+  soon("League of Legends", "leagueoflegends.svg"),
+  soon("Teamfight Tactics", "tft.svg"),
+  soon("Valorant", "valorant.svg"),
+  soon("Marvel Rivals", "marvelrivals.png"),
+  soon("Trackmania", "trackmania.png"),
+  soon("Brawlhalla", "brawlhalla.png"),
+  soon("GeoGuessr", "geoguessr.svg"),
+  soon("Rocket League"),
 ];
 
 export const GAMES = [

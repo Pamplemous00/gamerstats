@@ -207,7 +207,11 @@ body.has-tray { --tray-closed: 96px; padding-bottom: calc(var(--tray-closed) + 2
 /* Jeux à venir : grisés, non cliquables, petit badge « Bientôt ». */
 .game-tile.soon { position: relative; cursor: default; }
 .game-tile.soon:hover { transform: none; border-color: var(--border); background: var(--bg); }
-.game-tile.soon img { grid-area: 1 / 1; height: 28px; width: auto; max-height: none; opacity: .45; }
+.game-tile.soon img {
+  grid-area: 1 / 1; height: 28px; width: auto; max-width: 80%; max-height: none; object-fit: contain;
+  filter: grayscale(1) brightness(1.4); opacity: .45;
+}
+.soon-name { grid-area: 1 / 1; color: var(--muted); opacity: .7; font-weight: 700; font-size: .8rem; text-align: center; padding: 0 8px; }
 .soon-badge {
   position: absolute; right: 6px; top: 5px; font-size: .62rem; font-weight: 700;
   letter-spacing: .04em; text-transform: uppercase; color: var(--muted);
