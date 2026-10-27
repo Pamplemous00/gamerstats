@@ -5,6 +5,18 @@
 import * as chess from "./chess.js";
 import * as wot from "./wot.js";
 
+// Jeux prévus mais pas encore branchés : tuiles grisées « Bientôt » dans le panneau du bas.
+// Logos : projet Simple Icons (v13.21.0), recolorés en gris. Quand un jeu est branché,
+// le retirer d'ici et l'ajouter à GAMES.
+export const COMING_SOON = [
+  { name: "Lichess", image: "img/bientot/lichess.svg" },
+  { name: "osu!", image: "img/bientot/osu.svg" },
+  { name: "Dota 2", image: "img/bientot/dota2.svg" },
+  { name: "Counter-Strike 2", image: "img/bientot/counterstrike.svg" },
+  { name: "League of Legends", image: "img/bientot/leagueoflegends.svg" },
+  { name: "Valorant", image: "img/bientot/valorant.svg" },
+];
+
 export const GAMES = [
   {
     slug: "chesscom",

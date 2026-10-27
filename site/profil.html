@@ -56,7 +56,7 @@
       supabase, currentUser, formatNumber, setupBrandMenu, getLinkedUsername, computeScores,
       getDisplayName, openNameDialog,
     } from "./js/supabase.js";
-    import { GAMES } from "./js/games.js";
+    import { GAMES, COMING_SOON } from "./js/games.js";
     import { renderLeaderboard } from "./js/leaderboard.js";
 
     const user = await currentUser();
@@ -277,22 +277,32 @@
     // Recherche + message quand aucune tuile n'est visible.
     function updateTiles() {
       const text = search.value.trim().toLowerCase();
-      let available = 0, shown = 0;
-      for (const { tile } of games) {
+      let shown = 0;
+      for (const tile of $("tiles").children) {
         if (tile.hidden) continue;
-        available++;
         const match = tile.dataset.name.includes(text);
         tile.classList.toggle("filtered", !match);
         shown += match;
       }
-      const empty = $("tiles-empty");
-      empty.hidden = shown > 0;
-      empty.textContent = available ? "Aucun jeu ne correspond à ta recherche." : "Tu as ajouté tous les jeux disponibles.";
+      $("tiles-empty").hidden = shown > 0;
+      $("tiles-empty").textContent = "Aucun jeu ne correspond à ta recherche.";
       $("no-games").hidden = games.some((g) => !g.card.hidden);
     }
     search.addEventListener("input", updateTiles);
 
     const games = GAMES.map(createGame);
+
+    // Jeux à venir : tuiles grisées, non cliquables, après les jeux disponibles.
+    for (const soon of COMING_SOON) {
+      const tile = document.createElement("div");
+      tile.className = "game-tile soon";
+      tile.dataset.name = soon.name.toLowerCase();
+      tile.title = `${soon.name} : bientôt disponible`;
+      tile.setAttribute("role", "img");
+      tile.setAttribute("aria-label", `${soon.name}, bientôt disponible`);
+      tile.innerHTML = `<img src="${soon.image}" alt=""><span class="soon-badge">Bientôt</span>`;
+      $("tiles").append(tile);
+    }
 
     // Met à jour le bandeau et toutes les cartes.
     function renderAll({ rows, total }) {

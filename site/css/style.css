@@ -204,6 +204,14 @@ body.has-tray { --tray-closed: 96px; padding-bottom: calc(var(--tray-closed) + 2
 .game-tile img { max-height: 62%; max-width: 72%; }
 .game-tile .tc-icon { position: static; width: 40px; height: 40px; filter: none; }
 .game-tile.filtered { display: none; }
+/* Jeux à venir : grisés, non cliquables, petit badge « Bientôt ». */
+.game-tile.soon { position: relative; cursor: default; }
+.game-tile.soon:hover { transform: none; border-color: var(--border); background: var(--bg); }
+.game-tile.soon img { grid-area: 1 / 1; height: 28px; width: auto; max-height: none; opacity: .45; }
+.soon-badge {
+  position: absolute; right: 6px; top: 5px; font-size: .62rem; font-weight: 700;
+  letter-spacing: .04em; text-transform: uppercase; color: var(--muted);
+}
 .tray-empty { margin: 0; font-size: .85rem; }
 /* Panneau fermé : pas de loupe, barre réduite pour que les logos remontent. */
 .tray:not(.open):not(:has(.tray-search input:focus)) .tray-tiles { overflow: hidden; }
