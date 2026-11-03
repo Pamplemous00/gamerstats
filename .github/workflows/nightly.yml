@@ -1,0 +1,39 @@
+# Mise à jour automatique chaque nuit : classements des joueurs, scores, classement,
+# et (le lundi) répartition officielle Lichess. Voir nightly_refresh.py.
+# Peut aussi être lancée à la main : onglet « Actions » > « Mise à jour de nuit » > « Run workflow ».
+name: Mise à jour de nuit
+
+on:
+  schedule:
+    - cron: "0 3 * * *"   # tous les jours à 3 h (heure UTC, soit 4 h ou 5 h en France)
+  workflow_dispatch:
+    inputs:
+      lichess:
+        description: "Mettre aussi à jour la répartition Lichess"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Mettre à jour les classements et les scores
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          WG_APPLICATION_ID: ${{ secrets.WG_APPLICATION_ID }}
+        run: python nightly_refresh.py ${{ inputs.lichess && '--lichess' || '' }}

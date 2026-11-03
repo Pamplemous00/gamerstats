@@ -57,8 +57,12 @@ revoke execute on function public.gs_mode_stats(bigint) from public, anon, authe
 
 -- Le format du résultat a changé lors d'une version précédente : on supprime d'abord.
 drop function if exists public.compute_my_scores();
+drop function if exists public.compute_all_scores();
+drop function if exists public.compute_scores_for(uuid);
 
-create function public.compute_my_scores()
+-- Calcul des scores d'un membre (p_user). Réservé au serveur : les membres passent par
+-- compute_my_scores() (pour eux-mêmes), la mise à jour de nuit par compute_all_scores().
+create function public.compute_scores_for(p_user uuid)
 returns table (game text, mode text, rating integer, percentile numeric,
                sample_size integer, equivalent_elo numeric, points numeric)
 language plpgsql
@@ -71,7 +75,7 @@ declare
   base_points   constant numeric  := 200;
   elo_step      constant numeric  := 500;   -- les points doublent tous les 500 Elo
   recent_window constant interval := interval '6 months';
-  me            uuid := auth.uid();
+  me            uuid := p_user;
   ref_mode_id   bigint;
   ref           record;
   m             record;
@@ -200,9 +204,40 @@ begin
 end;
 $$;
 
--- Seuls les membres connectés peuvent lancer le calcul (et seulement pour eux-mêmes).
+revoke execute on function public.compute_scores_for(uuid) from public, anon, authenticated;
+
+-- Un membre connecté calcule ses propres scores (ouverture du profil, Actualiser).
+create function public.compute_my_scores()
+returns table (game text, mode text, rating integer, percentile numeric,
+               sample_size integer, equivalent_elo numeric, points numeric)
+language sql
+security definer set search_path = ''
+as $$
+  select * from public.compute_scores_for(auth.uid());
+$$;
 revoke execute on function public.compute_my_scores() from public, anon;
 grant execute on function public.compute_my_scores() to authenticated;
+
+-- Mise à jour de nuit : recalcule les scores de tous les membres qui ont au moins un jeu.
+-- Réservée à la clé secrète (service_role), utilisée par nightly_refresh.py.
+create function public.compute_all_scores()
+returns integer
+language plpgsql
+security definer set search_path = ''
+as $$
+declare
+  u   uuid;
+  cnt integer := 0;
+begin
+  for u in select distinct ga.user_id from public.game_accounts ga loop
+    perform public.compute_scores_for(u);
+    cnt := cnt + 1;
+  end loop;
+  return cnt;
+end;
+$$;
+revoke execute on function public.compute_all_scores() from public, anon, authenticated;
+grant execute on function public.compute_all_scores() to service_role;
 
 -- Lecture de ses propres scores. Personne ne peut les écrire directement :
 -- seule la fonction ci-dessus le fait.
