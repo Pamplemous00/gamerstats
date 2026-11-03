@@ -116,6 +116,7 @@ Fait (20/10/2026) : remplissage Chess.com terminé — Bullet 1 000, Blitz ~1 54
 - Le script relit les classements de chaque pseudo lié (Chess.com, Lichess, WoT ; nouvelle photo `rating_snapshots` seulement si le classement a changé ; échantillons Chess.com/WoT mis à jour comme le site), met à jour la répartition Lichess le lundi (ou `--lichess`), puis appelle `compute_all_scores()`.
 - `scores.sql` : le calcul est dans `compute_scores_for(p_user)` (réservé au serveur) ; `compute_my_scores()` l'appelle pour `auth.uid()` ; `compute_all_scores()` (service_role uniquement) le fait pour tous les membres qui ont un jeu.
 - Secrets GitHub (Settings > Secrets and variables > Actions) : `SUPABASE_URL`, `WG_APPLICATION_ID`, `SUPABASE_SERVICE_KEY` (clé secrète Supabase `sb_secret_…`, nommée `github-nightly` ; uniquement dans GitHub). Les journaux Actions sont publics : le script n'y écrit que des compteurs. `requirements.txt` : requests, python-dotenv, supabase.
+- Premier lancement manuel (avec la répartition Lichess) réussi le 03/11/2026. La répartition Lichess n'a donc plus besoin d'être mise à jour à la main (`lichess_distribution.py` reste utile pour une installation).
 - Bonus : l'activité hebdomadaire aide à éviter la mise en pause du projet Supabase gratuit (pause après 7 jours sans activité, la limite est juste).
 
 ## Prochaines étapes
