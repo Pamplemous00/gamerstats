@@ -27,7 +27,7 @@
     </div>
 
     <aside class="card leaderboard">
-      <h2>Classement</h2>
+      <div class="lb-head"><h2>Classement</h2><div class="lb-cat"></div></div>
       <div id="leaderboard"><p class="muted">Chargement…</p></div>
     </aside>
   </main>
@@ -74,9 +74,25 @@
     const pseudo = await getDisplayName();
     $("profile-name").textContent = pseudo ?? "";
     if (!pseudo) openNameDialog({ required: true });
+    // Classement : global, ou limité aux jeux cochés sur les cartes (rond en haut à droite).
+    const selectedGames = new Set();
+    function refreshLeaderboard() {
+      renderLeaderboard(leaderboard, {
+        games: [...selectedGames],
+        onReset: () => {
+          selectedGames.clear();
+          document.querySelectorAll(".tc-wrap.selected").forEach((w) => {
+            w.classList.remove("selected");
+            w.querySelector(".tc-pick").setAttribute("aria-pressed", "false");
+          });
+          refreshLeaderboard();
+        },
+      });
+    }
+
     document.addEventListener("gamerstats:pseudo", (event) => {
       $("profile-name").textContent = event.detail;
-      renderLeaderboard(leaderboard);
+      refreshLeaderboard();
     });
     $("logout").addEventListener("click", async () => {
       await supabase.auth.signOut();
@@ -109,9 +125,12 @@
       const art = game.image
         ? `<img class="tc-image" src="${game.image}" alt="">`
         : `<span class="tc-icon" aria-hidden="true">${game.icon}</span>`;
+      // Enveloppe : la carte + le rond « classement de ce jeu » en haut à droite.
+      const wrap = document.createElement("div");
+      wrap.className = "tc-wrap";
+      wrap.hidden = true;  // affichée seulement une fois le jeu lié
       const card = document.createElement("button");
       card.type = "button";
-      card.hidden = true;  // affichée seulement une fois le jeu lié
       card.className = "trading-card empty";
       card.style.setProperty("--game", game.color);
       card.setAttribute("aria-haspopup", "dialog");
@@ -124,7 +143,22 @@
             <span class="tc-add">+ Ajouter mon pseudo</span>
           </span>
         </span>`;
-      $("games").append(card);
+      const pick = document.createElement("button");
+      pick.type = "button";
+      pick.className = "tc-pick";
+      pick.setAttribute("aria-pressed", "false");
+      pick.title = `Classement ${game.name}`;
+      pick.setAttribute("aria-label", `Voir le classement ${game.name}`);
+      pick.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>`;
+      pick.addEventListener("click", () => {
+        const on = !selectedGames.has(game.slug);
+        on ? selectedGames.add(game.slug) : selectedGames.delete(game.slug);
+        wrap.classList.toggle("selected", on);
+        pick.setAttribute("aria-pressed", String(on));
+        refreshLeaderboard();
+      });
+      wrap.append(card, pick);
+      $("games").append(wrap);
 
       // Tuile du panneau du bas (jeu pas encore lié) : uniquement le logo officiel.
       const tile = document.createElement("button");
@@ -207,7 +241,7 @@
           await game.linkAndRefresh(user.id, input.value.trim());
           showMessage("Calcul de ton score…");
           renderAll(await computeScores());
-          renderLeaderboard(leaderboard);
+          refreshLeaderboard();
           showMessage("Score mis à jour !", "success");
           submit.textContent = "Actualiser";
         } catch (error) {
@@ -216,17 +250,17 @@
         submit.disabled = false;
       });
 
-      return { game, card, tile, dialog, input, submit };
+      return { game, card, wrap, tile, dialog, input, submit };
     }
 
     // Met à jour la carte et la fenêtre d'un jeu avec ses lignes de score.
     // Un jeu avec un score passe du panneau du bas (tuile) aux cartes du haut.
-    function renderGame({ game, card, tile, dialog }, rows) {
+    function renderGame({ game, card, wrap, tile, dialog }, rows) {
       if (!rows.length) return;
       const best = rows.reduce((a, b) => (b.points > a.points ? b : a));
       const top = Math.max(0.1, 100 - Number(best.percentile));
 
-      card.hidden = false;
+      wrap.hidden = false;
       tile.hidden = true;
       card.classList.remove("empty");
       card.style.setProperty("--top", pillColor(top));
@@ -289,7 +323,7 @@
       }
       $("tiles-empty").hidden = shown > 0;
       $("tiles-empty").textContent = "Aucun jeu ne correspond à ta recherche.";
-      $("no-games").hidden = games.some((g) => !g.card.hidden);
+      $("no-games").hidden = games.some((g) => !g.wrap.hidden);
     }
     search.addEventListener("input", updateTiles);
 
@@ -331,7 +365,7 @@
       $("total").textContent = "0";
     }
     updateTiles();
-    renderLeaderboard(leaderboard);  // après le calcul, pour que ton score soit à jour
+    refreshLeaderboard();  // après le calcul, pour que ton score soit à jour
   </script>
 </body>
 </html>
