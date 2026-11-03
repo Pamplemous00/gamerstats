@@ -1,11 +1,14 @@
-# Mise à jour automatique chaque nuit : classements des joueurs, scores, classement,
+# Mise à jour automatique : classements des joueurs, scores, classement,
 # et (le lundi) répartition officielle Lichess. Voir nightly_refresh.py.
 # Peut aussi être lancée à la main : onglet « Actions » > « Mise à jour de nuit » > « Run workflow ».
+#
+# Pour l'instant : une fois par semaine, le lundi (choix de l'utilisateur, 03/11/2026).
+# Quand le site sera connu : passer à chaque nuit avec cron "0 3 * * *".
 name: Mise à jour de nuit
 
 on:
   schedule:
-    - cron: "0 3 * * *"   # tous les jours à 3 h (heure UTC, soit 4 h ou 5 h en France)
+    - cron: "0 3 * * 1"   # le lundi à 3 h (heure UTC, soit 4 h ou 5 h en France)
   workflow_dispatch:
     inputs:
       lichess:
