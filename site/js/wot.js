@@ -55,14 +55,9 @@ function computeWn8(tanks, expected) {
   return { wn8: Math.round(wn8), battles };
 }
 
-// Empreinte SHA-256 du compte (identique à player_hash() de seed_wot_distribution.py).
-async function playerHash(accountId) {
-  const bytes = new TextEncoder().encode(`${GAME_SLUG}:${accountId}`);
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-// Lie le pseudo au compte, calcule le WN8, l'enregistre et met à jour la distribution.
+// Lie le pseudo au compte, calcule le WN8 et l'enregistre.
+// L'échantillon anonyme (distribution_samples) est mis à jour côté serveur, par la mise à
+// jour du lundi (nightly_refresh.py) : le site n'a plus le droit d'y écrire.
 export async function linkAndRefresh(userId, nickname) {
   const found = await wgGet("account/list", { search: nickname, type: "exact" });
   if (!found.length) throw new Error(`Joueur « ${nickname} » introuvable sur le serveur Europe.`);
@@ -99,9 +94,4 @@ export async function linkAndRefresh(userId, nickname) {
   const { error: snapError } = await supabase.from("rating_snapshots")
     .insert({ game_account_id: account.id, mode_id: modeId, ...row });
   if (snapError) throw snapError;
-
-  const { error: sampleError } = await supabase.from("distribution_samples").upsert(
-    { mode_id: modeId, player_hash: await playerHash(accountId), collected_at: new Date().toISOString(), ...row },
-    { onConflict: "mode_id,player_hash" });
-  if (sampleError) throw sampleError;
 }

@@ -24,14 +24,9 @@ function extractMode(stats, apiKey) {
   };
 }
 
-// Empreinte SHA-256 du pseudo (identique à player_hash() de chess_fetch.py).
-async function playerHash(username) {
-  const bytes = new TextEncoder().encode(`${GAME_SLUG}:${username.toLowerCase()}`);
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-// Lie le pseudo au compte, enregistre ses ratings et met à jour la distribution.
+// Lie le pseudo au compte et enregistre ses ratings.
+// L'échantillon anonyme (distribution_samples) est mis à jour côté serveur, par la mise à
+// jour du lundi (nightly_refresh.py) : le site n'a plus le droit d'y écrire.
 export async function linkAndRefresh(userId, username) {
   const stats = await fetchStats(username);
   if (!stats) throw new Error(`Joueur « ${username} » introuvable sur Chess.com.`);
@@ -55,12 +50,5 @@ export async function linkAndRefresh(userId, username) {
     const { error: snapError } = await supabase.from("rating_snapshots").insert(
       ratings.map((r) => ({ game_account_id: account.id, mode_id: r.mode.id, ...r.data })));
     if (snapError) throw snapError;
-
-    const hash = await playerHash(username);
-    const now = new Date().toISOString();
-    const { error: sampleError } = await supabase.from("distribution_samples").upsert(
-      ratings.map((r) => ({ mode_id: r.mode.id, player_hash: hash, collected_at: now, ...r.data })),
-      { onConflict: "mode_id,player_hash" });
-    if (sampleError) throw sampleError;
   }
 }

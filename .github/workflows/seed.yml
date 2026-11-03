@@ -1,0 +1,50 @@
+# Remplissage des échantillons de joueurs (Chess.com ou World of Tanks), lancé à la main :
+# onglet « Actions » > « Remplir les échantillons » > « Run workflow ».
+# Tourne sur GitHub avec la clé secrète (seule autorisée à écrire dans distribution_samples).
+# Peut durer longtemps (plusieurs heures pour Chess.com) : on peut fermer la page, ça continue.
+name: Remplir les échantillons
+
+on:
+  workflow_dispatch:
+    inputs:
+      jeu:
+        description: "Jeu à remplir"
+        type: choice
+        options: [chesscom, wot]
+        default: chesscom
+      objectif:
+        description: "Nombre de joueurs récents visés (par mode)"
+        type: number
+        default: 1000
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seed-${{ inputs.jeu }}
+  cancel-in-progress: false
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Remplir
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          WG_APPLICATION_ID: ${{ secrets.WG_APPLICATION_ID }}
+          JEU: ${{ inputs.jeu }}
+          OBJECTIF: ${{ inputs.objectif }}
+        run: |
+          if [ "$JEU" = "wot" ]; then
+            python seed_wot_distribution.py --target "$OBJECTIF"
+          else
+            python seed_distribution.py --target "$OBJECTIF"
+          fi

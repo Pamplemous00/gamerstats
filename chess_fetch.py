@@ -51,14 +51,19 @@ def extract_mode(stats, api_key):
 
 
 def connect():
-    """Crée le client Supabase à partir du fichier .env."""
+    """Crée le client Supabase.
+
+    Sur GitHub Actions, SUPABASE_SERVICE_KEY (clé secrète, rangée dans les secrets GitHub)
+    est utilisée : elle seule peut écrire dans distribution_samples. Sur ton PC, c'est la clé
+    publique SUPABASE_KEY du fichier .env (la clé secrète ne doit pas y être).
+    """
     load_dotenv()
     url = os.getenv("SUPABASE_URL")
-    key = os.getenv("SUPABASE_KEY")
+    key = os.getenv("SUPABASE_SERVICE_KEY") or os.getenv("SUPABASE_KEY")
     if not url or not key:
         print("Erreur : SUPABASE_URL ou SUPABASE_KEY manquant dans le fichier .env")
         sys.exit(1)
-    return create_client(url, key)
+    return create_client(url.strip(), key.strip())
 
 
 def fetch_ratings(supabase, username):
@@ -105,8 +110,15 @@ def save_samples(supabase, username, ratings):
         }
         for mode, data in ratings
     ]
-    if rows:
+    if not rows:
+        return
+    try:
         supabase.table("distribution_samples").upsert(rows, on_conflict="mode_id,player_hash").execute()
+    except Exception as error:
+        if "42501" in str(error) or "permission denied" in str(error):
+            print("Échantillons non enregistrés : réservé à la clé secrète (GitHub Actions).")
+            return
+        raise
     print(f"{len(rows)} échantillon(s) enregistré(s) dans distribution_samples.")
 
 
